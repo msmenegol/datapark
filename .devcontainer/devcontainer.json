@@ -1,0 +1,5 @@
+{
+  "name": "datapark dev",
+  "build": {"dockerfile": "Dockerfile"},
+  "postStartCommand": "pre-commit install --config .devcontainer/.pre-commit-config.yaml"
+}
