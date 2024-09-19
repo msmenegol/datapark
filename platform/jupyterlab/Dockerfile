@@ -6,6 +6,9 @@ USER jptr
 WORKDIR /home/jptr
 ENV PATH="/home/jptr/.local/bin:${PATH}"
 
+SHELL ["/bin/bash", "-c"]
+ENV SHELL="/bin/bash"
+
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 RUN rm requirements.txt

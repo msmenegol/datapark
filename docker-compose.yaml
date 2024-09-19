@@ -16,8 +16,20 @@ services:
     build:
       dockerfile: Dockerfile
       context: ./platform/jupyterlab/
+    ports:
+      - 8888:8888
     volumes:
       - ./platform/jupyterlab/:/home/jptr/
+    command:
+      - -c
+      - python -m http.server 8888
+#      - "PW_SHA=$$(python -c
+#          \"from jupyter_server.auth import passwd; 
+#          print(passwd('${JUPYTERLAB_PASSWORD}', 'sha1').lstrip('sha1:'))\"
+#        )
+#        && jupyter lab
+#          --ip=0.0.0.0
+#          --PasswordIdentityProvider.hashed_password=\"$$PW_SHA\""
   #prefect:
   #mlflow:
   #redash:
