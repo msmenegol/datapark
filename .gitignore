@@ -1,0 +1,5 @@
+# Ignore hidden folders inside platform
+platform/*/.*
+
+# Ignore data folders
+platform/*/data
