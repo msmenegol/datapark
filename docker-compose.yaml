@@ -22,13 +22,8 @@ services:
       - ./platform/jupyterlab/:/home/jptr/
     command:
       - -c
-      - "PW_SHA=$$(python -c
-          \"from jupyter_server.auth import passwd; 
-          print(passwd('${JUPYTERLAB_PASSWORD}', 'sha1').lstrip('sha1:'))\"
-        )
-        && jupyter lab
-          --ip=0.0.0.0
-          --PasswordIdentityProvider.hashed_password=\"$$PW_SHA\""
+      - "HOST_IP=$$(hostname -I | awk '{print $1}')
+          && jupyter lab --ip $$HOST_IP "
   #prefect:
   #mlflow:
   #redash:
