@@ -4,5 +4,8 @@ platform/*/.*
 # Ignore data folders
 platform/*/data/*
 
+#Ignore mlflow files
+platform/mlflow/mlruns
+
 # Keep .keep files
 !.keep

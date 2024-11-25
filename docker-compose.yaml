@@ -40,6 +40,17 @@ services:
     volumes:
       - minio-data:/bitnami/minio/data
 
+  mlflow:
+    image: bitnami/mlflow:2
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./platform/mlflow:/app
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - "mlflow server --host 0.0.0.0 --port 8080"
+
 volumes:
   minio-data:
     driver: local
