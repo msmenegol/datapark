@@ -1,8 +1,8 @@
-# Keep .keep files
-!.keep
-
 # Ignore hidden folders inside platform
 platform/*/.*
 
 # Ignore data folders
-platform/*/data
+platform/*/data/*
+
+# Keep .keep files
+!.keep
