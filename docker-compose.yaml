@@ -38,7 +38,15 @@ services:
       - MINIO_SERVER_ACCESS_KEY=${MINIO_SERVER_ACCESS_KEY}
       - MINIO_SERVER_SECRET_KEY=${MINIO_SERVER_SECRET_KEY}
     volumes:
-      - ./platform/minio/data:/bitnami/minio/data
+      - minio-data:/bitnami/minio/data
+
+volumes:
+  minio-data:
+    driver: local
+    driver_opts:
+      device: ./platform/minio/data
+      type: none
+      o: bind
 
   #prefect:
   #mlflow:
