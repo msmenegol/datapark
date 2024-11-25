@@ -14,19 +14,18 @@ services:
 
   jupyterlab:
     build:
-      dockerfile: Dockerfile
-      context: ./platform/jupyterlab/
+      context: ./platform/jupyterlab
     environment:
       - MINIO_SERVER_ACCESS_KEY=${MINIO_SERVER_ACCESS_KEY}
       - MINIO_SERVER_SECRET_KEY=${MINIO_SERVER_SECRET_KEY}
     ports:
       - 8888:8888
     volumes:
-      - ./platform/jupyterlab/:/home/jptr/
+      - ./platform/jupyterlab/:/home/jptr/app/
     command:
       - -c
       - "HOST_IP=$$(hostname -I | awk '{print $1}')
-          && jupyter lab --ip $$HOST_IP "
+          && cd app && jupyter lab --ip $$HOST_IP "
 
   minio:
     image: bitnami/minio:2024
@@ -43,5 +42,4 @@ services:
 
   #prefect:
   #mlflow:
-  #redash:
   #deltalake:
