@@ -3,3 +3,6 @@ platform/*/.*
 
 # Ignore data folders
 platform/*/data
+
+# Keep .keep files
+!.keep
