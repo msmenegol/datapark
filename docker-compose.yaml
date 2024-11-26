@@ -1,7 +1,7 @@
 services:
   postgresql:
     image: postgres:15
-    hostname: postgresql_db
+    hostname: postgresql
     ports:
       - 5432:5432
     volumes:
@@ -28,9 +28,15 @@ services:
       - -c
       - "HOST_IP=$$(hostname -I | awk '{print $1}')
           && cd app && jupyter lab --ip $$HOST_IP "
+    depends_on:
+      postgresql:
+        condition: service_started
+      minio:
+        condition: service_started
 
   minio:
     image: bitnami/minio:2024
+    hostname: minio
     ports:
       - '9000:9000'
       - '9001:9001'
@@ -49,9 +55,17 @@ services:
     volumes:
       - ./platform/mlflow:/app
     entrypoint: /bin/bash
+    environment:
+      - MLFLOW_DB_USER=${MLFLOW_DB_USER}
+      - MLFLOW_DB_PASSWORD=${MLFLOW_DB_PASSWORD}
     command:
       - -c
-      - "mlflow server --host 0.0.0.0 --port 8080 --backend-store-uri postgresql+pg8000:///my.db"
+      - "mlflow server --host 0.0.0.0 --port 8080
+          --backend-store-uri postgresql+psycopg2://${MLFLOW_DB_USER}:${MLFLOW_DB_PASSWORD}@postgresql:5432/mlflow"
+    depends_on:
+      postgresql:
+        condition: service_started
+        restart: true
 
 volumes:
   minio-data:

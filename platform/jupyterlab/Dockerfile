@@ -13,4 +13,3 @@ RUN rm requirements.txt
 RUN mkdir -p /home/jptr/app/
 
 ENTRYPOINT ["/bin/bash"]
-#ENTRYPOINT ["jupyter", "lab", "--ip", "0.0.0.0"]
