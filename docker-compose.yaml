@@ -13,6 +13,13 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - MLFLOW_DB_USER=${MLFLOW_DB_USER}
       - MLFLOW_DB_PASSWORD=${MLFLOW_DB_PASSWORD}
+      - DAGSTER_DB_USER=${DAGSTER_DB_USER}
+      - DAGSTER_DB_PASSWORD=${DAGSTER_DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 60s
+      retries: 3
 
   jupyterlab:
     build:
@@ -30,7 +37,7 @@ services:
           && cd app && jupyter lab --ip $$HOST_IP "
     depends_on:
       postgresql:
-        condition: service_started
+        condition: service_healthy
       minio:
         condition: service_started
 
@@ -64,8 +71,33 @@ services:
           --backend-store-uri postgresql+psycopg2://${MLFLOW_DB_USER}:${MLFLOW_DB_PASSWORD}@postgresql:5432/mlflow"
     depends_on:
       postgresql:
-        condition: service_started
+        condition: service_healthy
         restart: true
+
+  dagster:
+    build:
+      context: ./platform/dagster
+    hostname: dagster
+    environment:
+      - MINIO_SERVER_ACCESS_KEY=${MINIO_SERVER_ACCESS_KEY}
+      - MINIO_SERVER_SECRET_KEY=${MINIO_SERVER_SECRET_KEY}
+      - DAGSTER_PG_USERNAME=${DAGSTER_DB_USER}
+      - DAGSTER_PG_PASSWORD=${DAGSTER_DB_PASSWORD}
+      - DAGSTER_PG_HOST=postgresql
+      - DAGSTER_PG_DB=dagster
+      - LOCAL_COMPUTE_LOG_MANAGER_DIRECTORY=/opt/dagster/logs
+    ports:
+      - 3000:3000
+    volumes:
+      - ./platform/dagster/:/opt/dagster/app
+    command:
+      - -c
+      - "dagster-webserver -h 0.0.0.0 -p 3000"
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      minio:
+        condition: service_started
 
 volumes:
   minio-data:
@@ -75,5 +107,4 @@ volumes:
       type: none
       o: bind
 
-  #prefect:
   #deltalake:
