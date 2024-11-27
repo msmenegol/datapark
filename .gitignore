@@ -4,11 +4,14 @@ platform/*/.*
 # Ignore data folders
 platform/*/data/*
 
-#Ignore mlflow files
+# Ignore mlflow files
 platform/mlflow/mlruns
 
-#Ignore pycache
+# Ignore pycache
 __pycache__/
+
+#Ignore notebooks checkpoints
+.ipynb_checkpoints
 
 # Keep .keep files
 !.keep

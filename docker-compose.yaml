@@ -17,7 +17,7 @@ services:
       - DAGSTER_DB_PASSWORD=${DAGSTER_DB_PASSWORD}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 30s
+      interval: 10s
       timeout: 60s
       retries: 3
 
@@ -25,8 +25,8 @@ services:
     build:
       context: ./platform/jupyterlab
     environment:
-      - MINIO_SERVER_ACCESS_KEY=${MINIO_SERVER_ACCESS_KEY}
-      - MINIO_SERVER_SECRET_KEY=${MINIO_SERVER_SECRET_KEY}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
     ports:
       - 8888:8888
     volumes:
@@ -40,6 +40,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_started
+      spark-master:
+        condition: service_started
 
   minio:
     image: bitnami/minio:2024
@@ -50,8 +52,6 @@ services:
     environment:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-      - MINIO_SERVER_ACCESS_KEY=${MINIO_SERVER_ACCESS_KEY}
-      - MINIO_SERVER_SECRET_KEY=${MINIO_SERVER_SECRET_KEY}
     volumes:
       - minio-data:/bitnami/minio/data
 
@@ -79,8 +79,8 @@ services:
       context: ./platform/dagster
     hostname: dagster
     environment:
-      - MINIO_SERVER_ACCESS_KEY=${MINIO_SERVER_ACCESS_KEY}
-      - MINIO_SERVER_SECRET_KEY=${MINIO_SERVER_SECRET_KEY}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
       - DAGSTER_PG_USERNAME=${DAGSTER_DB_USER}
       - DAGSTER_PG_PASSWORD=${DAGSTER_DB_PASSWORD}
       - DAGSTER_PG_HOST=postgresql
@@ -99,6 +99,41 @@ services:
       minio:
         condition: service_started
 
+  spark-master:
+    image: spark:3.5.3-python3
+    command: ../sbin/start-master.sh
+    environment:
+      - SPARK_NO_DAEMONIZE=${SPARK_NO_DAEMONIZE}
+      - SPARK_MASTER_HOST=${SPARK_MASTER_HOST}
+    ports:
+      - 9090:9090
+
+  spark-worker-a:
+    image: spark:3.5.3-python3
+    environment:
+      - SPARK_NO_DAEMONIZE=${SPARK_NO_DAEMONIZE}
+      - SPARK_WORKER_WEBUI_PORT=9091
+      - SPARK_WORKER_CORES=1
+      - SPARK_WORKER_MEMORY=2G
+    ports:
+      - 9091:9091
+    depends_on:
+      - spark-master
+    command: '../sbin/start-worker.sh ${SPARK_MASTER_HOST}:7077'
+
+  spark-worker-b:
+    image: spark:3.5.3-python3
+    environment:
+      - SPARK_NO_DAEMONIZE=${SPARK_NO_DAEMONIZE}
+      - SPARK_WORKER_WEBUI_PORT=9092
+      - SPARK_WORKER_CORES=1
+      - SPARK_WORKER_MEMORY=2G
+    ports:
+      - 9092:9092
+    depends_on:
+      - spark-master
+    command: '../sbin/start-worker.sh ${SPARK_MASTER_HOST}:7077'
+
 volumes:
   minio-data:
     driver: local
@@ -106,5 +141,3 @@ volumes:
       device: ./platform/minio/data
       type: none
       o: bind
-
-  #deltalake:
