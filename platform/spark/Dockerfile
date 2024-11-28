@@ -5,6 +5,9 @@ RUN echo root:rootpw | chpasswd
 RUN echo spark:sparkpw | chpasswd
 
 #RUN set -ex; \
+#    echo "deb https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu focal main" > /etc/apt/sources.list;
+#    echo "deb-src https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu focal main" > /etc/apt/sources.list;
+#    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F23C5A6CF475977595C89F51BA6932366A755776;
 #    apt-get update; \
 #    apt install -y software-properties-common; \
 #    add-apt-repository ppa:deadsnakes/ppa -y; \
