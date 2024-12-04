@@ -8,8 +8,8 @@ psql -U ${POSTGRES_USER} <<-END
 END
 
 psql -U ${POSTGRES_USER} <<-END
-    create database ${DAGSTER_DB_USER};
-    create user ${DAGSTER_DB_USER} with encrypted password '${DAGSTER_DB_PASSWORD}';
-    alter database ${DAGSTER_DB_USER} owner to ${DAGSTER_DB_USER};
-    grant all privileges on database ${DAGSTER_DB_USER} to ${DAGSTER_DB_USER};
+    create database ${AIRFLOW_DB_USER};
+    create user ${AIRFLOW_DB_USER} with encrypted password '${AIRFLOW_DB_PASSWORD}';
+    alter database ${AIRFLOW_DB_USER} owner to ${AIRFLOW_DB_USER};
+    grant all privileges on database ${AIRFLOW_DB_USER} to ${AIRFLOW_DB_USER};
 END

@@ -1,9 +1,30 @@
+x-airflow-common:
+  &airflow-common
+  build:
+    context: ./platform/airflow
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${AIRFLOW_DB_USER}:${AIRFLOW_DB_PASSWORD}@postgresql:${POSTGRES_PORT}/airflow
+    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL: 10
+  volumes:
+    - .platform/airflow/dags:/opt/airflow/dags
+    - .platform/airflow/plugins:/opt/airflow/plugins
+  user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
+  depends_on:
+    &airflow-common-depends-on
+    postgresql:
+      condition: service_healthy
+
 services:
   postgresql:
     image: postgres:15
     hostname: postgresql
     ports:
-      - 5432:5432
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     volumes:
       - ./platform/postgresql/init.sh:/docker-entrypoint-initdb.d/init.sh
       - ./platform/postgresql/data/:/var/lib/postgresql/data/pgdata/
@@ -13,8 +34,8 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - MLFLOW_DB_USER=${MLFLOW_DB_USER}
       - MLFLOW_DB_PASSWORD=${MLFLOW_DB_PASSWORD}
-      - DAGSTER_DB_USER=${DAGSTER_DB_USER}
-      - DAGSTER_DB_PASSWORD=${DAGSTER_DB_PASSWORD}
+      - AIRFLOW_DB_USER=${AIRFLOW_DB_USER}
+      - AIRFLOW_DB_PASSWORD=${AIRFLOW_DB_PASSWORD}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -27,14 +48,17 @@ services:
     environment:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - AIRFLOW_USER=${AIRFLOW_USER}
+      - AIRFLOW_PASSWORD=${AIRFLOW_PASSWORD}
     ports:
-      - 8888:8888
+      - "${JPTR_PORT}:${JPTR_PORT}"
     volumes:
       - ./platform/jupyterlab/:/home/jptr/app/
     command:
       - -c
-      - "HOST_IP=$$(hostname -I | awk '{print $1}')
-          && cd app && jupyter lab --ip $$HOST_IP "
+      - |
+        HOST_IP=$$(hostname -I | awk '{print $1}') \
+        && cd app && jupyter lab --ip $$HOST_IP
     depends_on:
       postgresql:
         condition: service_healthy
@@ -47,8 +71,8 @@ services:
     image: bitnami/minio:2024
     hostname: minio
     ports:
-      - '9000:9000'
-      - '9001:9001'
+      - "${MINIO_API_PORT}:${MINIO_API_PORT}"
+      - "${MINIO_CONSOLE_PORT}:${MINIO_CONSOLE_PORT}"
     environment:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
@@ -58,7 +82,7 @@ services:
   mlflow:
     image: bitnami/mlflow:2
     ports:
-      - '8080:8080'
+      - "${MLFLOW_PORT}:${MLFLOW_PORT}"
     volumes:
       - ./platform/mlflow:/app
     entrypoint: /bin/bash
@@ -67,37 +91,13 @@ services:
       - MLFLOW_DB_PASSWORD=${MLFLOW_DB_PASSWORD}
     command:
       - -c
-      - "mlflow server --host 0.0.0.0 --port 8080
-          --backend-store-uri postgresql+psycopg2://${MLFLOW_DB_USER}:${MLFLOW_DB_PASSWORD}@postgresql:5432/mlflow"
+      - |
+        mlflow server --host 0.0.0.0 --port ${MLFLOW_PORT} \
+        --backend-store-uri postgresql+psycopg2://${MLFLOW_DB_USER}:${MLFLOW_DB_PASSWORD}@postgresql:${POSTGRES_PORT}/mlflow
     depends_on:
       postgresql:
         condition: service_healthy
         restart: true
-
-  dagster:
-    build:
-      context: ./platform/dagster
-    hostname: dagster
-    environment:
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-      - DAGSTER_PG_USERNAME=${DAGSTER_DB_USER}
-      - DAGSTER_PG_PASSWORD=${DAGSTER_DB_PASSWORD}
-      - DAGSTER_PG_HOST=postgresql
-      - DAGSTER_PG_DB=dagster
-      - LOCAL_COMPUTE_LOG_MANAGER_DIRECTORY=/opt/dagster/logs
-    ports:
-      - 3000:3000
-    volumes:
-      - ./platform/dagster/:/opt/dagster/app
-    command:
-      - -c
-      - "dagster-webserver -h 0.0.0.0 -p 3000"
-    depends_on:
-      postgresql:
-        condition: service_healthy
-      minio:
-        condition: service_started
 
   spark-master:
     build:
@@ -106,19 +106,20 @@ services:
     environment:
       - SPARK_NO_DAEMONIZE=${SPARK_NO_DAEMONIZE}
       - SPARK_MASTER_HOST=${SPARK_MASTER_HOST}
+      - SPARK_MASTER_WEBUI_PORT=${SPARK_MASTER_PORT}
     ports:
-      - 9090:9090
+      - "${SPARK_MASTER_PORT}:${SPARK_MASTER_PORT}"
 
   spark-worker-a:
     build:
       context: ./platform/spark
     environment:
       - SPARK_NO_DAEMONIZE=${SPARK_NO_DAEMONIZE}
-      - SPARK_WORKER_WEBUI_PORT=9091
+      - SPARK_WORKER_WEBUI_PORT=${SPARK_WORKER_A_PORT}
       - SPARK_WORKER_CORES=1
       - SPARK_WORKER_MEMORY=2G
     ports:
-      - 9091:9091
+      - "${SPARK_WORKER_A_PORT}:${SPARK_WORKER_A_PORT}"
     depends_on:
       - spark-master
     command: '../sbin/start-worker.sh ${SPARK_MASTER_HOST}:7077'
@@ -128,14 +129,50 @@ services:
       context: ./platform/spark
     environment:
       - SPARK_NO_DAEMONIZE=${SPARK_NO_DAEMONIZE}
-      - SPARK_WORKER_WEBUI_PORT=9092
+      - SPARK_WORKER_WEBUI_PORT=${SPARK_WORKER_B_PORT}
       - SPARK_WORKER_CORES=1
       - SPARK_WORKER_MEMORY=2G
     ports:
-      - 9092:9092
+      - "${SPARK_WORKER_B_PORT}:${SPARK_WORKER_B_PORT}"
     depends_on:
       - spark-master
     command: '../sbin/start-worker.sh ${SPARK_MASTER_HOST}:7077'
+
+  airflow-webserver:
+    <<: *airflow-common
+    hostname: airflow
+    command: 'webserver --port ${AIRFLOW_PORT}'
+    ports:
+      - "${AIRFLOW_PORT}:${AIRFLOW_PORT}"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://airflow:${AIRFLOW_PORT}/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-init:
+    <<: *airflow-common
+    command: version
+    environment:
+      <<: *airflow-common-env
+      _AIRFLOW_DB_UPGRADE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_WWW_USER_USERNAME: ${AIRFLOW_USER}
+      _AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_PASSWORD}
 
 volumes:
   minio-data:
