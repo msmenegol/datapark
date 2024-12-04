@@ -13,7 +13,6 @@ x-airflow-common:
   volumes:
     - .platform/airflow/dags:/opt/airflow/dags
     - .platform/airflow/plugins:/opt/airflow/plugins
-  user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
   depends_on:
     &airflow-common-depends-on
     postgresql:
