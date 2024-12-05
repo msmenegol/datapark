@@ -10,8 +10,11 @@ platform/mlflow/mlruns
 # Ignore pycache
 __pycache__/
 
-#Ignore notebooks checkpoints
+# Ignore notebooks checkpoints
 .ipynb_checkpoints
+
+# Ignore logs
+logs/
 
 # Keep .keep files
 !.keep

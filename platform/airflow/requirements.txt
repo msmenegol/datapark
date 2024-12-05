@@ -2,6 +2,7 @@ scikit-learn==1.5.2
 pyspark==3.5.3
 delta-spark==3.2.0
 deltalake==0.22.0
-boto3==1.35.70
-botocore==1.35.70
-pandas==2.2.2
+boto3==1.35
+botocore==1.35
+pandas==2.1
+apache-airflow-providers-apache-spark==4.11.3
