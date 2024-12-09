@@ -85,6 +85,7 @@ services:
 
   mlflow:
     image: bitnami/mlflow:2
+    hostname: mlflow
     ports:
       - "${MLFLOW_PORT}:${MLFLOW_PORT}"
     volumes:

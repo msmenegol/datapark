@@ -6,6 +6,7 @@ platform/*/data/*
 
 # Ignore mlflow files
 platform/mlflow/mlruns
+platform/mlflow/mlartifacts
 
 # Ignore pycache
 __pycache__/
