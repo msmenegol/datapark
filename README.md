@@ -14,6 +14,11 @@ To run everything (on a Unix/WSL terminal):
 docker compose up -d
 ```
 
+To shut it down:
+```shell
+docker compose down
+```
+
 To access the different services on the browser:
 - jupyterlab: http://localhost:8888
 - minio: http://localhost:9001
@@ -21,5 +26,6 @@ To access the different services on the browser:
 - airflow: http://localhost:8081
 - spark: http://localhost:9090
 
-The platform has examples to help you use the different services from notebooks. There is also an example on how to build Airflow DAGs that run on Spark.
 You can find usernames and password for the different services on the [.env](.env) file. Please make sure you change those before using.
+The platform has examples to help you use the different services from notebooks. There is also an example on how to build Airflow DAGs that run on Spark.
+By defaut, notebooks are stored on `platform/jupyterlab/notebooks/` and DAGs can be found on `platform/airflow/dags`.
