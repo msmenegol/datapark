@@ -9,14 +9,13 @@ Datapark is a self-hosted data platform for educational purposes. It consists of
 - [spark](https://spark.apache.org/): the 3 Spark containers (one master and two workers) provide a Spark cluster that can be used for computing tasks.
 - [airflow](https://airflow.apache.org/): the 3 Airflow containers (one for setting up, one for the web-ui, and one for the scheduler) allows for the scheduling and monitoring of data workflows.
 
-To run everything:
+To run everything (on a Unix/WSL terminal):
 ```shell
-docker compose up --attach jupyterlab
+docker compose up -d
 ```
 
-Attaching Jupyterlab will ensure that you get the URL with the token on the terminal and it doesn't get lost amidst other messages.
-
 To access the different services on the browser:
+- jupyterlab: http://localhost:8888
 - minio: http://localhost:9001
 - mlflow: http://localhost:8080
 - airflow: http://localhost:8081

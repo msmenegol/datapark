@@ -61,8 +61,9 @@ services:
     command:
       - -c
       - |
-        HOST_IP=$$(hostname -I | awk '{print $1}') \
-        && cd app && jupyter lab --ip $$HOST_IP
+        HASHED_PW=$(python -c 'from jupyter_server.auth import passwd; print(passwd("${JPTR_PASSWORD}"))') && \
+        HOST_IP=$$(hostname -I | awk '{print $1}') && \
+        cd app && jupyter lab --ip $$HOST_IP --PasswordIdentityProvider.hashed_password $$HASHED_PW
     depends_on:
       postgresql:
         condition: service_healthy
