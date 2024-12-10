@@ -1,6 +1,6 @@
 # DATAPARK
 
-Datapark is a self-hosted data platform for educational purposes. It consists of a collection of containerized services that allow the user to build solutions for data-related problems. On the [docker-compose](docker-compose.yaml) file you can find the following services:
+Datapark is a self-hosted data platform for educational purposes. It consists of a collection of containerized services that allow the user to build solutions for data-related problems. To use them, you'll need to have [docker](https://docs.docker.com/) installed. On the [docker-compose](docker-compose.yaml) file you can find the following services:
 
 - [jupyterlab](https://jupyter.org/): a Jupyter lab server. This is where a developer should be able to use notebooks for handling their data and prototyping their solution.
 - [postgresql](https://www.postgresql.org/): a PostgreSQL database. This can be used for storing data. It's used by other services to store their metadata, such as Minio and MLFlow.
