@@ -9,6 +9,7 @@ Datapark is a self-hosted data platform for educational purposes. It consists of
 - [spark](https://spark.apache.org/): the 3 Spark containers (one master and two workers) provide a Spark cluster that can be used for computing tasks.
 - [airflow](https://airflow.apache.org/): the 3 Airflow containers (one for setting up, one for the web-ui, and one for the scheduler) allows for the scheduling and monitoring of data workflows.
 
+To use, simply clone this repository.
 To run everything (on a Unix/WSL terminal):
 ```shell
 docker compose up -d
