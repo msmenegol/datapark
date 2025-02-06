@@ -27,6 +27,6 @@ To access the different services on the browser:
 - airflow: http://localhost:8081
 - spark: http://localhost:9090
 
-You can find usernames and password for the different services on the [.env](.env) file. Please make sure you change those before using.
+You can find usernames and password for the different services on the [.env](.env) file. I've had some issues with the terminal loading the variables in the .env file and then passing them on to `docker compose`, not allowing it to reload the contents of the file. Therefore, if you make changes to it, I suggest restarting the services from a fresh terminal. Please make sure you change those before using, especially the passwords.
 The platform has examples to help you use the different services from notebooks. There is also an example on how to build Airflow DAGs that run on Spark.
 By defaut, notebooks are stored on `platform/jupyterlab/notebooks/` and DAGs can be found on `platform/airflow/dags`.
